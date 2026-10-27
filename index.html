@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wanderly — Your trip, thoughtfully planned</title>
+  
+  <!-- Google Fonts & Leaflet CSS & Chart.js -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Application Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ================= HEADER / NAVIGATION ================= -->
+  <header class="app-header">
+    <div class="brand-logo" onclick="WanderlyApp.switchView('home')">
+      <div class="brand-icon-wrapper">
+        <span class="brand-icon-symbol" aria-hidden="true">⌖</span>
+      </div>
+      <div class="brand-name">Wanderly</div>
+    </div>
+
+    <nav class="nav-pills" aria-label="Main navigation">
+      <button class="nav-link active" data-view="home">Plan a trip</button>
+      <button class="nav-link" data-view="dashboard">My itinerary</button>
+      <button class="nav-link" data-view="algorithm">How it works</button>
+    </nav>
+
+    <div class="header-badges">
+      <span class="tech-badge">✦ 6 European cities</span>
+      <span class="tech-badge">Routes · stays · trip tools</span>
+    </div>
+  </header>
+
+  <!-- ================= MAIN VIEWS CONTAINER ================= -->
+  <main class="main-view-container">
+
+    <!-- ---------------- PAGE 1: TRIP SETUP ---------------- -->
+    <section id="view-home" class="view-section active-view">
+      <div class="landing-hero">
+        <div class="hero-pill">YOUR NEXT CITY BREAK STARTS HERE</div>
+        <h1 class="hero-title">Make room for <span class="gradient-text">getting lost.</span></h1>
+        <p class="hero-subtitle">
+          Build a trip that feels like yours. Pick a city, set your pace, and bring your days together in one easy-to-edit plan.
+        </p>
+      </div>
+
+      <!-- Trip setup -->
+      <div class="form-float-card">
+        <form id="travel-form">
+          <div class="form-grid">
+
+            <div class="form-group">
+              <label class="form-label" for="city-select">Where to?</label>
+              <select id="city-select" class="form-select">
+                <option value="London" selected>🇬🇧 London, United Kingdom</option>
+                <option value="Paris">🇫🇷 Paris, France</option>
+                <option value="Amsterdam">🇳🇱 Amsterdam, Netherlands</option>
+                <option value="Barcelona">🇪🇸 Barcelona, Spain</option>
+                <option value="Milan">🇮🇹 Milan, Italy</option>
+                <option value="Vienna">🇦🇹 Vienna, Austria</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="traveler-select">Who’s coming?</label>
+              <select id="traveler-select" class="form-select">
+                <option value="Solo traveler" selected>Solo</option>
+                <option value="Family with young children">Family</option>
+                <option value="Group">Friends or group</option>
+                <option value="Couple">Two travelers</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">What kind of trip?</label>
+              <div class="toggle-group">
+                <button type="button" class="toggle-btn active" data-purpose="Leisure">Explore</button>
+                <button type="button" class="toggle-btn" data-purpose="Business">Work trip</button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="tags-input">What are you into?</label>
+              <input type="text" id="tags-input" class="form-input" placeholder="e.g. art, food, parks, walkable" value="museum food walkable">
+              <div class="tag-mood-container">
+                <span class="mood-chip selected" data-tag="museum">Museums</span>
+                <span class="mood-chip selected" data-tag="food">Food</span>
+                <span class="mood-chip selected" data-tag="walkable">Walkable</span>
+                <span class="mood-chip" data-tag="park">Parks</span>
+                <span class="mood-chip" data-tag="architecture">Architecture</span>
+                <span class="mood-chip" data-tag="canal">Canals</span>
+                <span class="mood-chip" data-tag="market">Markets</span>
+                <span class="mood-chip" data-tag="quiet">Quiet spots</span>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="form-grid trip-details-grid">
+            <div class="form-group">
+              <label class="form-label" for="trip-date">When are you going?</label>
+              <input type="date" id="trip-date" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="trip-budget">Trip budget (EUR)</label>
+              <input type="number" id="trip-budget" class="form-input" min="0" step="50" value="1500">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 2rem;">
+            <label class="form-label" for="days-slider">How long are you going?</label>
+            <div class="slider-container">
+              <input type="range" id="days-slider" class="range-slider" min="1" max="5" value="3" step="1">
+              <div id="days-badge" class="slider-badge">3 days</div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" id="btn-plan-getaway" class="btn-cta-peach">
+              Build my itinerary <span aria-hidden="true">→</span>
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </section>
+
+
+    <!-- ---------------- PAGE 2: TRIP WORKSPACE ---------------- -->
+    <section id="view-dashboard" class="view-section">
+      <div class="trip-overview">
+        <div>
+          <div class="eyebrow">YOUR TRIP WORKSPACE</div>
+          <h1 id="trip-overview-title">Your itinerary</h1>
+          <p id="trip-overview-subtitle">A flexible plan for wherever you’re headed.</p>
+        </div>
+        <div class="trip-overview-actions">
+          <button type="button" id="save-trip-btn" class="btn-secondary">Save trip</button>
+          <button type="button" id="print-trip-btn" class="btn-secondary">Print plan</button>
+          <button type="button" id="export-trip-btn" class="btn-secondary">Export itinerary</button>
+        </div>
+      </div>
+
+      <div class="trip-stat-grid" aria-label="Trip overview">
+        <div class="trip-stat-card"><span>Days planned</span><strong id="stat-days">3</strong></div>
+        <div class="trip-stat-card"><span>Stops planned</span><strong id="stat-stops">0</strong></div>
+        <div class="trip-stat-card"><span>Route distance</span><strong id="stat-distance">0 km</strong></div>
+        <div class="trip-stat-card"><span>Budget remaining</span><strong id="stat-budget">€1,500</strong></div>
+      </div>
+      <div class="trip-progress-card">
+        <div class="trip-progress-heading"><strong>Trip progress</strong><span id="trip-progress-label">0 of 0 stops done</span></div>
+        <div class="trip-progress-track"><div id="trip-progress-bar" class="trip-progress-bar"></div></div>
+      </div>
+
+      <div class="dashboard-grid">
+
+        <!-- Itinerary editor -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <h2 class="panel-title">Day-by-day plan</h2>
+            <span class="tech-badge">Drag to reorder</span>
+          </div>
+
+          <div id="day-tabs-container" class="day-tabs-container">
+          </div>
+
+          <div class="day-details-card">
+            <div class="day-details-heading">
+              <div><div class="eyebrow">MAKE THE DAY YOURS</div><h3 id="day-details-title">Day 1 details</h3></div>
+              <span class="tool-icon" aria-hidden="true">↗</span>
+            </div>
+            <div class="day-details-fields">
+              <div class="form-group">
+                <label class="form-label" for="day-transport">Getting around</label>
+                <select id="day-transport" class="form-select">
+                  <option value="">Choose a travel style</option>
+                  <option>Walk</option>
+                  <option>Public transport</option>
+                  <option>Bike</option>
+                  <option>Taxi or rideshare</option>
+                  <option>Rental car</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="day-plan-notes">Food & day notes</label>
+                <input id="day-plan-notes" class="form-input" type="text" placeholder="Lunch idea, tickets, or a reminder">
+              </div>
+            </div>
+          </div>
+
+          <div id="timeline-list" class="timeline-list">
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-header">
+            <h2 class="panel-title">Route map</h2>
+            <span class="tech-badge">Stops for the selected day</span>
+          </div>
+
+          <div id="leaflet-map"></div>
+
+          <div class="charts-grid">
+            <div class="chart-card">
+              <div class="chart-title">Guest sentiment</div>
+              <div class="chart-wrapper">
+                <canvas id="chart-sentiment"></canvas>
+              </div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">Guest ratings</div>
+              <div class="chart-wrapper">
+                <canvas id="chart-rating"></canvas>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <section class="trip-tools-section" aria-labelledby="trip-tools-title">
+        <div class="section-heading">
+          <div class="eyebrow">THE PRACTICAL STUFF</div>
+          <h2 id="trip-tools-title">Keep the details together</h2>
+        </div>
+        <div class="trip-tools-grid">
+          <article class="tool-card">
+            <div class="tool-card-heading"><div><div class="eyebrow">SPENDING PLAN</div><h3>Trip budget</h3></div><span class="tool-icon">€</span></div>
+            <label class="form-label" for="budget-total">Total budget (€)</label>
+            <input id="budget-total" class="form-input tool-input" type="number" min="0" step="50" value="1500">
+            <label class="form-label" for="budget-spent">Other spend (€)</label>
+            <input id="budget-spent" class="form-input tool-input" type="number" min="0" step="10" value="0">
+            <div class="budget-progress-track"><div id="budget-progress" class="budget-progress"></div></div>
+            <p id="budget-summary" class="tool-hint">€1,500 left to spend</p>
+          </article>
+
+          <article class="tool-card">
+            <div class="tool-card-heading"><div><div class="eyebrow">KEEP TRACK</div><h3>Expense log</h3></div><span class="tool-icon">↘</span></div>
+            <form id="expense-form" class="expense-form">
+              <div class="form-group">
+                <label class="form-label" for="expense-description">What did you spend on?</label>
+                <input id="expense-description" class="form-input tool-input" type="text" maxlength="80" placeholder="Train tickets" required>
+              </div>
+              <div class="expense-form-row">
+                <div class="form-group">
+                  <label class="form-label" for="expense-amount">Amount (€)</label>
+                  <input id="expense-amount" class="form-input tool-input" type="number" min="0.01" step="0.01" placeholder="12.50" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="expense-category">Category</label>
+                  <select id="expense-category" class="form-select tool-input">
+                    <option>Food</option>
+                    <option>Transport</option>
+                    <option>Stay</option>
+                    <option>Activity</option>
+                    <option>Shopping</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+              </div>
+              <button type="submit" class="btn-secondary">Add expense</button>
+            </form>
+            <div id="expense-list" class="expense-list" aria-live="polite"></div>
+            <p id="expense-summary" class="tool-hint">No expenses logged yet</p>
+          </article>
+
+          <article class="tool-card">
+            <div class="tool-card-heading"><div><div class="eyebrow">READY TO GO</div><h3>Packing list</h3></div><span class="tool-icon">✓</span></div>
+            <div id="packing-list" class="packing-list"></div>
+            <div class="packing-add-row">
+              <input id="packing-new-item" class="form-input tool-input" type="text" placeholder="Add an item" aria-label="Add an item">
+              <button type="button" id="packing-add-btn" class="btn-secondary" aria-label="Add packing item">Add</button>
+            </div>
+            <p id="packing-summary" class="tool-hint">0 items packed</p>
+          </article>
+
+          <article class="tool-card">
+            <div class="tool-card-heading"><div><div class="eyebrow">DON’T FORGET</div><h3>Trip notes</h3></div><span class="tool-icon">✎</span></div>
+            <label class="form-label" for="trip-notes">Reservations, reminders, and ideas</label>
+            <textarea id="trip-notes" class="form-input trip-notes" placeholder="Add confirmation numbers, places to try, or anything else to remember..."></textarea>
+            <button type="button" id="save-notes-btn" class="btn-secondary">Save notes</button>
+          </article>
+        </div>
+      </section>
+    </section>
+
+    <!-- ---------------- PAGE EXTRA: ALGORITHM BREAKDOWN ---------------- -->
+    <section id="view-algorithm" class="view-section">
+      <div class="panel-card" style="max-width: 900px; margin: 0 auto;">
+        <div class="panel-header">
+          <h2 class="panel-title">How recommendations work</h2>
+          <span class="tech-badge">NLTK VADER + K-Means</span>
+        </div>
+        <div style="line-height: 1.8; font-size: 0.95rem; color: var(--text-dark);">
+          <p style="margin-bottom: 1rem;">
+            Wanderly ranks stays in the selected city using your interests, traveler type, and available review signals:
+          </p>
+          <ul style="margin-left: 1.5rem; margin-bottom: 1.5rem;">
+            <li><strong>Interest matching:</strong> Matches your selected preferences to stay descriptions and tags.</li>
+            <li><strong>Review signals:</strong> Combines guest ratings and sentiment scores to help rank suggestions.</li>
+            <li><strong>Traveler fit:</strong> Uses traveler-type signals from the sample dataset to tune recommendations.</li>
+            <li><strong>Route planning:</strong> Groups suggested stops across trip days and orders them by proximity.</li>
+          </ul>
+          <div class="algorithm-note">
+            <strong>About the suggestions:</strong> Recommendations come from the sample stays included with this project. The map and route are planning aids, not live availability or transit directions.
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+
+  <!-- ================= PAGE 3: INTEGRATED AI TOURIST ASSISTANT & CHATBOT ================= -->
+  
+  <!-- Floating Mascot Trigger Button -->
+  <div id="floating-mascot-trigger" class="floating-mascot-trigger" role="button" tabindex="0" aria-label="Open trip planning assistant">
+    <span class="assistant-avatar assistant-avatar-small" aria-hidden="true">
+      <svg viewBox="0 0 48 48" focusable="false">
+        <path d="M24 7v5m0-7v2" />
+        <circle cx="24" cy="4" r="2" />
+        <rect x="9" y="12" width="30" height="25" rx="9" />
+        <path d="M16 23h.1m15.8 0h.1M18 30c1.7 1.5 3.7 2.2 6 2.2s4.3-.7 6-2.2" />
+        <path d="M4 20v9m40-9v9" />
+        <path d="m37 7 1.4 2.6L41 11l-2.6 1.4L37 15l-1.4-2.6L33 11l2.6-1.4L37 7Z" />
+      </svg>
+    </span>
+    <span class="mascot-trigger-text">Trip planning assistant</span>
+  </div>
+
+  <!-- Sliding Right-Hand Chatbot Drawer -->
+  <aside id="chatbot-drawer" class="chatbot-drawer">
+    <div class="chat-header">
+      <div class="chat-mascot-header">
+        <span class="assistant-avatar assistant-avatar-large" aria-hidden="true">
+          <svg viewBox="0 0 48 48" focusable="false">
+            <path d="M24 7v5m0-7v2" />
+            <circle cx="24" cy="4" r="2" />
+            <rect x="9" y="12" width="30" height="25" rx="9" />
+            <path d="M16 23h.1m15.8 0h.1M18 30c1.7 1.5 3.7 2.2 6 2.2s4.3-.7 6-2.2" />
+            <path d="M4 20v9m40-9v9" />
+            <path d="m37 7 1.4 2.6L41 11l-2.6 1.4L37 15l-1.4-2.6L33 11l2.6-1.4L37 7Z" />
+          </svg>
+        </span>
+        <div class="chat-title-wrapper">
+          <h3>Wanderly trip assistant</h3>
+          <div class="chat-status">Here to help plan your trip</div>
+        </div>
+      </div>
+      <button id="chat-close-btn" class="chat-close-btn">✕</button>
+    </div>
+
+    <!-- Chat Messages Scroll Container -->
+    <div id="chat-messages" class="chat-messages">
+      <!-- Preloaded bot bubbles appended by JS -->
+    </div>
+
+    <!-- Quick Prompt Pills -->
+    <div class="prompt-pills-wrapper">
+      <button type="button" class="prompt-pill" data-prompt="Summarize my day">My day</button>
+      <button type="button" class="prompt-pill" data-prompt="How much budget do I have left?">Budget check</button>
+      <button type="button" class="prompt-pill" data-prompt="Suggest a stay">Suggest a stay</button>
+      <button type="button" class="prompt-pill" data-prompt="How is my packing progress?">Packing</button>
+      <button type="button" class="prompt-pill" data-prompt="Make my route quieter">Quieter route</button>
+      <button type="button" class="prompt-pill" data-prompt="Prioritize breakfast stops">Breakfast stops</button>
+    </div>
+
+    <!-- Chat Input Bar -->
+    <div class="chat-input-bar">
+      <input type="text" id="chat-input" class="chat-input" placeholder="Ask about your itinerary...">
+      <button id="chat-send-btn" class="chat-send-btn" aria-label="Send message">→</button>
+    </div>
+  </aside>
+
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- Edit Stop Modal -->
+  <div id="modal-edit-stop" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>✏️ Edit Stop Details</h3>
+        <button class="modal-close-btn">✕</button>
+      </div>
+      <form id="edit-stop-form">
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label">Place or activity name</label>
+          <input type="text" id="edit-stop-title" class="form-input" required>
+        </div>
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label">Guest rating (1.0 - 10.0)</label>
+          <input type="number" id="edit-stop-rating" class="form-input" step="0.1" min="1" max="10" required>
+        </div>
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label class="form-label">Tags (comma separated)</label>
+          <input type="text" id="edit-stop-tags" class="form-input">
+        </div>
+        <div class="form-grid stop-edit-grid">
+          <div class="form-group">
+            <label class="form-label" for="edit-stop-time">Start time</label>
+            <input type="time" id="edit-stop-time" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="edit-stop-duration">Time needed (minutes)</label>
+            <input type="number" id="edit-stop-duration" class="form-input" min="0" step="15" placeholder="60">
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label" for="edit-stop-notes">Personal reminder</label>
+          <input type="text" id="edit-stop-notes" class="form-input" placeholder="Ticket booked, meet at entrance...">
+        </div>
+        <div style="text-align: right;">
+          <button type="submit" class="btn-cta-peach" style="padding: 0.6rem 1.5rem; font-size: 0.95rem;">Save stop</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Stop Modal -->
+  <div id="modal-add-stop" class="modal-overlay">
+    <div class="modal-card" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3 id="add-modal-day-title">Add a stay</h3>
+        <button class="modal-close-btn">✕</button>
+      </div>
+      <div style="margin-bottom: 1rem;">
+        <input type="text" id="add-stop-search" class="form-input" placeholder="Search by stay name or tag...">
+      </div>
+      <div id="add-stop-results" style="max-height: 320px; overflow-y: auto;">
+        <!-- Results rendered dynamically -->
+      </div>
+      <button type="button" id="open-custom-stop-btn" class="btn-add-stop">＋ Add your own place or activity</button>
+    </div>
+  </div>
+
+  <div id="modal-custom-stop" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Add your own stop</h3>
+        <button class="modal-close-btn" type="button" aria-label="Close">✕</button>
+      </div>
+      <form id="custom-stop-form">
+        <div class="form-group form-group-spaced">
+          <label class="form-label" for="custom-stop-title">Place or activity</label>
+          <input id="custom-stop-title" class="form-input" type="text" required maxlength="100" placeholder="e.g. Tate Modern">
+        </div>
+        <div class="form-grid stop-edit-grid">
+          <div class="form-group">
+            <label class="form-label" for="custom-stop-type">Type</label>
+            <select id="custom-stop-type" class="form-select">
+              <option>Activity</option>
+              <option>Meal</option>
+              <option>Stay</option>
+              <option>Travel</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="custom-stop-time">Start time</label>
+            <input id="custom-stop-time" class="form-input" type="time">
+          </div>
+        </div>
+        <div class="form-group form-group-spaced">
+          <label class="form-label" for="custom-stop-duration">Time needed (minutes)</label>
+          <input id="custom-stop-duration" class="form-input" type="number" min="0" step="15" placeholder="60">
+        </div>
+        <div class="form-group form-group-spaced">
+          <label class="form-label" for="custom-stop-address">Address or meeting point</label>
+          <input id="custom-stop-address" class="form-input" type="text" maxlength="160" placeholder="Add an address for your reference">
+        </div>
+        <div class="form-group form-group-spaced">
+          <label class="form-label" for="custom-stop-notes">Notes</label>
+          <input id="custom-stop-notes" class="form-input" type="text" maxlength="180" placeholder="Tickets, booking details, or anything to remember">
+        </div>
+        <div class="form-grid stop-edit-grid">
+          <div class="form-group">
+            <label class="form-label" for="custom-stop-lat">Latitude (optional, for map)</label>
+            <input id="custom-stop-lat" class="form-input" type="number" step="any" min="-90" max="90" placeholder="51.5072">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="custom-stop-lng">Longitude (optional, for map)</label>
+            <input id="custom-stop-lng" class="form-input" type="number" step="any" min="-180" max="180" placeholder="-0.1276">
+          </div>
+        </div>
+        <div class="form-actions"><button type="submit" class="btn-cta-peach">Add to my day</button></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    Wanderly — A little more room for the good parts of travel.
+  </footer>
+
+  <!-- Application Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/algorithm.js"></script>
+  <script src="js/chatbot.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
